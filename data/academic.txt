@@ -1,0 +1,10 @@
+academic
+physics
+study
+chemistry
+class
+studying
+library
+university
+ucla
+
