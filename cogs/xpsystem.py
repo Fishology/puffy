@@ -5,8 +5,10 @@ from bin.checkuser import CheckUser # Custom json data production
 from bin.timenow import TimeNow # Custom current time function
 from discord.utils import get # ???
 import random
+from datetime import date
 
 REFRESH_SECONDS = 5 # Everytime the discord servers will be searched
+BASE_MINS = 3
 BASE_XP = 3 # Every loop with give +3 XP
 BONUS_XP = 10 # 10x the woots!
 XP_SCALE = 1.05
@@ -22,6 +24,17 @@ RoleID70 = 823159182206697520
 RoleID80 = 823159182206697521
 RoleID90 = 823159182218756126 
 RoleID100 = 823159182218756127
+
+MONDAY = 0
+TUESDAY = 1
+WEDNESDAY = 2
+THURSDAY = 3
+FRIDAY = 4
+SATURDAY = 5
+SUNDAY = 6
+churchID = 823159182613282835
+forgeID = 823159182613282832
+
 
 guildFile = open("data/private/mainguildid.txt", "r")
 KING_HEAD_ID = int(guildFile.read())
@@ -49,6 +62,24 @@ class XpSystem(commands.Cog):
 
     @tasks.loop(seconds=REFRESH_SECONDS)
     async def XpCheck(self):
+        # Check if it is finally the right day to open the voice channel
+        if date.today().weekday() == SUNDAY:
+            if self.isClosed:
+                print(f"{TimeNow()} opening church")
+                self.perms.connect=True
+                await self.churchChan.set_permissions(self.mainguild.default_role, overwrite=self.perms)
+                self.isClosed = False
+        else:
+            if not self.isClosed:
+                print(f"{TimeNow()} closing church")
+                self.perms.connect=False
+                await self.churchChan.set_permissions(self.mainguild.default_role, overwrite=self.perms)
+                self.isClosed = True
+                if len(self.churchChan.members):
+                    for member in self.churchChan.members:
+                        await member.move_to(self.forgeChan)
+
+        
         print(f"{TimeNow()} starting xpcheck...")
         gamers = [] # Gaming channels
         nerds = []  # Study channels
@@ -92,11 +123,16 @@ class XpSystem(commands.Cog):
         for user in users:
             gamer = data[str(user.id)]
             # Add xp and mins to database
-            gamer["mins"] += BASE_XP
             if (user in bonus_chans):
                 gamer["cur_xp"] += BASE_XP * BONUS_XP
             else:
                 gamer["cur_xp"] += BASE_XP
+
+            if (user in nerds):
+                gamer["study_mins"] += BASE_MINS
+            else:
+                gamer["mins"] += BASE_MINS
+
             # Check if lvl up
             while (gamer["cur_xp"] >= gamer["max_xp"]):
                 gamer["cur_xp"] = gamer["cur_xp"] - gamer["max_xp"]
@@ -203,6 +239,13 @@ class XpSystem(commands.Cog):
         await self.client.wait_until_ready()
         guilds = await self.client.fetch_guilds(limit=150).flatten()
         self.mainguild = self.client.get_guild(KING_HEAD_ID)
+
+        self.forgeChan = self.client.get_channel(forgeID)
+        self.churchChan = self.client.get_channel(churchID)
+        self.perms = self.churchChan.overwrites_for(self.mainguild.default_role)
+        self.isClosed = not self.perms.connect
+        print(self.isClosed)
+
         for textchan in self.mainguild.text_channels:
             if textchan.name == "puffy":
                 self.puffychan = textchan
