@@ -7,23 +7,23 @@ from discord.utils import get # ???
 import random
 from datetime import date
 
-REFRESH_SECONDS = 5 # Everytime the discord servers will be searched
+REFRESH_SECONDS = 180 # Everytime the discord servers will be searched
 BASE_MINS = 3
 BASE_XP = 3 # Every loop with give +3 XP
-BONUS_XP = 10 # 10x the woots!
+BONUS_XP = 2 # 10x the woots!
 XP_SCALE = 1.05
 
-RoleID1 = 823159182206697513
-RoleID10 = 823159182206697514
-RoleID20 = 823159182206697515
-RoleID30 = 823159182206697516
-RoleID40 = 823159182206697517
-RoleID50 = 823159182206697518
-RoleID60 = 823159182206697519
-RoleID70 = 823159182206697520
-RoleID80 = 823159182206697521
-RoleID90 = 823159182218756126 
-RoleID100 = 823159182218756127
+RoleID1   = 791281068119556136 
+RoleID10  = 791278665328754708
+RoleID20  = 791278664837890048
+RoleID30  = 791278664045821962
+RoleID40  = 791278663332397057
+RoleID50  = 791278662799851530
+RoleID60  = 791278662078824458
+RoleID70  = 791278661013733386
+RoleID80  = 791278660215898112
+RoleID90  = 791278659096543244
+RoleID100 = 791278658299101195
 
 MONDAY = 0
 TUESDAY = 1
@@ -32,8 +32,10 @@ THURSDAY = 3
 FRIDAY = 4
 SATURDAY = 5
 SUNDAY = 6
-churchID = 823159182613282835
-forgeID = 823159182613282832
+
+churchID = 791287662827798548
+forgeID = 675205322511482922
+puffyChanID = 729274494408982559
 
 
 guildFile = open("data/private/mainguildid.txt", "r")
@@ -69,12 +71,14 @@ class XpSystem(commands.Cog):
                 self.perms.connect=True
                 await self.churchChan.set_permissions(self.mainguild.default_role, overwrite=self.perms)
                 self.isClosed = False
+                await self.puffyChan.send("Church is now open!")
         else:
             if not self.isClosed:
                 print(f"{TimeNow()} closing church")
                 self.perms.connect=False
                 await self.churchChan.set_permissions(self.mainguild.default_role, overwrite=self.perms)
                 self.isClosed = True
+                await self.puffyChan.send("Church is now closed!") #FIXME: ADD A GIF >:(
                 if len(self.churchChan.members):
                     for member in self.churchChan.members:
                         await member.move_to(self.forgeChan)
@@ -240,11 +244,11 @@ class XpSystem(commands.Cog):
         guilds = await self.client.fetch_guilds(limit=150).flatten()
         self.mainguild = self.client.get_guild(KING_HEAD_ID)
 
+        self.puffyChan = self.client.get_channel(puffyChanID)
         self.forgeChan = self.client.get_channel(forgeID)
         self.churchChan = self.client.get_channel(churchID)
         self.perms = self.churchChan.overwrites_for(self.mainguild.default_role)
         self.isClosed = not self.perms.connect
-        print(self.isClosed)
 
         for textchan in self.mainguild.text_channels:
             if textchan.name == "puffy":

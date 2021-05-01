@@ -51,3 +51,6 @@
 -prefix
 -announce
 -perms
+-mute
+-m
+-shutup
