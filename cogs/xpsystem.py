@@ -194,7 +194,7 @@ class XpSystem(commands.Cog):
                         new_role = get(self.mainguild.roles, id = newRoleID)
                     elif level == 60:
                         changedRole = True
-                        prevRoleID = RoleI510
+                        prevRoleID = RoleID50
                         newRoleID = RoleID60
                         prev_role = get(self.mainguild.roles, id = prevRoleID)
                         new_role = get(self.mainguild.roles, id = newRoleID)
